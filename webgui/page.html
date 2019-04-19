@@ -1,0 +1,92 @@
+<html>
+    <head>
+        <title>"Web3 - Simple Demo"</title>
+        <script src="./node_modules/web3/dist/web3.min.js"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    </head>
+    <body class="container">
+        <h3>Web3 - Usage Example</h3>
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="blockchain">
+                <h3> 1. Set the value in the blockchain</h3>
+                <div class="form-group form-inline">
+                    <input type="text" class="text form-control" value="">
+                    <button id="set">Set Value</button>
+                    <p>Once you set the value, an event will be created which will be used to identify the status of the transaction.</p>
+                </div>
+                <h3> 2. Get the current value</h3>
+                <div class="form-group">
+                    <div>
+                        current value is <span id="response"></span>
+                    </div>
+                    <button id="get">Get Value</button>
+                    <p>Click the button to get the current value.</p>
+                </div>
+                <h3> 3. Contract Calls </h3>
+                <p>Javascript calls being made: </p>
+            </div>
+        </div>
+    </body>
+
+    <script>
+    var Web3 = require("web3");
+    if (typeof web3 !== 'undefined') {
+       console.log('MetaMask is installed -> Using Metamask !');
+       web3 = new Web3(web3.currentProvider);
+    } else {
+        console.log('MetaMask is not installed -> Using provider @localhost');
+        web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:9545"));
+    }
+
+    web3.eth.getAccounts( function(err, accounts) {
+      if (err != null) {
+        console.log(err)
+      }
+      else if (accounts.length === 0) {
+        console.log('MetaMask is locked')
+      }
+      else {
+        console.log('MetaMask is unlocked')
+        // Neet to get the address here, in the callback !
+        web3.eth.defaultAccount = web3.eth.accounts[0];
+        console.log('Using account: ' + web3.eth.defaultAccount);
+      }
+    });
+
+
+    var ABI = [{"constant":false,"inputs":[{"name":"_n","type":"uint256"}],"name":"set","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"","type":"uint256"}],"name":"report","type":"event"}];
+    var Contract = web3.eth.contract(ABI);
+    var testContract = Contract.at('0x0D76f23981FA5255430Eb3F4f4ecF9E81222fe7b');
+    // test
+    console.log (testContract);
+
+    $("#set").click(function() {
+        // set transaction
+        var value = $("#blockchain input.text").val();
+        var params = {
+            gas: 40000,
+            from: web3.eth.defaultAccount
+            };
+        testContract.set(value,params, function(err,res) {
+          if ( err !== null ) {
+              console.log(err);
+          } else {
+              console.log("res: " + res)
+          }
+        });
+    });
+
+    $("#get").click(function() {
+        // read/view
+        testContract.get( function (err, res) {
+            if ( err !== null ) {
+                console.log(err);
+            } else {
+                console.log("res: " + res)
+                $('#response').text(":"+res);
+            }
+        });
+    });
+
+    </script>
+</html>
